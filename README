@@ -1,3 +1,9 @@
+Changes made:
+The disabled mode works far better now. Instead of re-sending input when a hotkey is triggered, this uses #If regions to completely disable the hotkeys. 
+I ran into issues where the previous method of disabling would interfere with some video games. 
+I also added in logic to prevent Vim mode from being entered when VALORANT is open. 
+I'd like to eventually extend this to just use a list of blacklisted programs in a separate file, but I don't want ot have to figure that out right now.
+
 This project implements vi like keys for any arbitrary editor like app on
 windows as far as possible.
 
@@ -22,7 +28,3 @@ using this "current" line calculate movement options
 
 
 Note: Don't think that this comes even close to Vim features. But it works everywhere
-
-
-TODO:
-- make it switch off vi mode if user changes app manually eg by alt-tab
