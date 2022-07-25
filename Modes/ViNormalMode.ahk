@@ -22,7 +22,7 @@ KMD_ViperDoRepeat(tosend)
     ;; should use confirmation instead
     if (c > 2000)
       c := 2000
-    
+
     Loop %c%
     {
         S := S . tosend
@@ -31,26 +31,26 @@ KMD_ViperDoRepeat(tosend)
     vi_normal_mode["repeat_count"] := 0
 }
 
-; Beide wichtige Konstanten 
-WM_HSCROLL := 0x114 
-WM_VSCROLL := 0x115 
+; Beide wichtige Konstanten
+WM_HSCROLL := 0x114
+WM_VSCROLL := 0x115
 
-; Vertikal scrollen 
-SB_BOTTOM := 7 
-SB_ENDSCROLL := 8 
-SB_LINEDOWN := 1 
-SB_LINEUP := 0 
-SB_PAGEDOWN := 3 
-SB_PAGEUP := 2 
-SB_THUMBPOSITION := 4 
-SB_THUMBTRACK := 5 
+; Vertikal scrollen
+SB_BOTTOM := 7
+SB_ENDSCROLL := 8
+SB_LINEDOWN := 1
+SB_LINEUP := 0
+SB_PAGEDOWN := 3
+SB_PAGEUP := 2
+SB_THUMBPOSITION := 4
+SB_THUMBTRACK := 5
 SB_TOP := 6
 
 KMD_Scroll(a, b, amount)
 {
   ; a = WM_HSCROLL or WM_VSCROLL
   ; b = one of SB_ above
-  ControlGetFocus, FocusedControl, A 
+  ControlGetFocus, FocusedControl, A
   Loop %amount%
   {
     SendMessage, %a%, %b%, 0, %FocusedControl%, A  ; 0x114 is WM_HSCROLL ; 1 vs. 0 causes SB_LINEDOWN vs. UP    }
@@ -77,7 +77,7 @@ vi_delphi_2009_search(direction, word)
 {
   global
   local requested_direction
-  
+
   if (direction * direction == 4){
     ; repeat search
     requested_direction := round(direction / 2) * vi_normal_mode["last_search_direction"]
@@ -114,7 +114,7 @@ vi_delphi_2009_search(direction, word)
   {
     ; del to remove completion
     KMD_Send("{Del}{Enter}")
-  } else 
+  } else
   {
     KMD_SetMode("vi_insert_mode")
   }
@@ -129,11 +129,11 @@ EDITOR_API()
   api := {}
   api["goto_line"] := "vi_slow_goto_line"
   api["search"] := "vi_search_not_implemented"
-  
+
   ; DELPHI 2009 specific - because that's the app I'm using right now:
   ; TODO only asign this if the target is Delphi 2009
-  api["goto_line"] := "vi_delphi_2009_goto_line"
-  api["search"] := "vi_delphi_2009_search"
+  ; api["goto_line"] := "vi_delphi_2009_goto_line"
+  ; api["search"] := "vi_delphi_2009_search"
 
   return api
 }
@@ -142,7 +142,7 @@ vi_slow_goto_line(nr)
 {
   ; goto line
     ; this implementation of G can be optimized. Most editiors support "goto line"
-    vi_normal_mode["repeat_count"] := vi_normal_mode["repeat_count"] -1
+    vi_normal_mode["repeat_count"] := nr - 1
     KMD_Send("^{Home}")
     KMD_ViperDoRepeat("{Down}")
 }
@@ -198,6 +198,17 @@ vi_normal_mode_handle_keys(key)
     return
   }
 
+  if (key == "+g")
+  {
+    if (vi_normal_mode["repeat_count"] == 0){
+       KMD_Send("^{End}")
+    } else
+    {
+      api["goto_line"](vi_normal_mode["repeat_count"])
+      vi_normal_mode["repeat_count"] := 0
+    }
+    return
+  }
 
   if (vi_normal_mode["last_chars"] == "g")
   {
@@ -216,31 +227,14 @@ vi_normal_mode_handle_keys(key)
     return
   }
 
-  if (key == "+g")
-  {
-    if (vi_normal_mode["repeat_count"] == 0){
-       KMD_Send("^{End}")
-    } else 
-    {
-      api["goto_line"](vi_normal_mode["repeat_count"])
-      vi_normal_mode["repeat_count"] := 0
-    }
-    return
-  }
-
-  if (key == "g")
-  {
-      vi_normal_mode["last_chars"] := vi_normal_mode["last_chars"] . key
-    return
-  }
   if (key == "^d" || key="^u")
   {
       ;; I'm not sure  whether PgUp/PgDn should be used
       ;; PgUp/Don moves cursor
-      if (key == "^d") 
+      if (key == "^d")
       {
         KMD_Scroll(WM_VSCROLL, SB_PAGEDOWN, 1)
-      }else if (key == "^u") 
+      }else if (key == "^u")
       {
         KMD_Scroll(WM_VSCROLL, SB_PAGEUP, 1) ; scroll up
       }
@@ -281,7 +275,7 @@ vi_normal_mode_handle_keys(key)
 
   if (vi_normal_mode["last_chars"] == "d"){
     if (key == "d"){
-      KMD_Send("{Home}+{Down}")
+      KMD_Send("{Home}{Home}+{Down}")
     }
     else if (key == "j"){
       KMD_Send("{Home}+{Down}")
@@ -301,7 +295,7 @@ vi_normal_mode_handle_keys(key)
   }
 
 
-  if (vi_normal_mode["simple_commands"].HasKey(key)) 
+  if (vi_normal_mode["simple_commands"].HasKey(key))
   {
     KMD_ViperDoRepeat(vi_normal_mode["simple_commands"][key])
     return

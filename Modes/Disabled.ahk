@@ -1,12 +1,16 @@
-start_disabled_mode(){
-   Menu, Tray, Icon, %A_ScriptDir%\Images\Disabled.ico, 0, 1
+start_disabled_mode()
+{
+
 }
 
-end_disabled_mode(){
+end_disabled_mode()
+{
+  
 }
 
-disabled_mode_handle_keys(key){
-  KMD_Send(key)
+disabled_mode_handle_keys(key)
+{
+
 }
 
 disabled_mode := {}

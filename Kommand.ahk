@@ -60,8 +60,7 @@ KMD_Init()
      KMD_Modes["vi_insert_mode"] := vi_insert_mode
      KMD_Modes["disabled"] := disabled_mode
 
-     KMD_Mode := "disabled"
-     start_disabled_mode()
+    KMD_SetMode("disabled")
 }
 
 KMD_Send(keys)
@@ -80,51 +79,64 @@ KMD_SetMode(mode){
 
   ; set early so that "start" can switch mode again
   KMD_Mode := mode
-  KMD_Modes[mode]["start"]()
+  if (KMD_Mode != "disabled")
+  {
+    KMD_Modes[mode]["start"]()
+  }
+
   Menu, Tray, Icon, %A_ScriptDir%\Images\%mode%.ico, 0, 1
 }
-    
+
 ShowMessage(title, message, icon)
 {
   Run Utilities\SnarlCMD.exe snShowMessage 5 "%title%" "%message%" "%A_ScriptDir%\Images\%icon%",,UseErrorLevel
 }
 
-
-Capslock::
-  if (KMD_Mode == "vi_insert_mode"){
+~Capslock::
+  Process, Exist, VALORANT.exe
+  if (GetKeyState("Capslock", "T") && ErrorLevel == 0)
+  {
     KMD_SetMode("vi_normal_mode")
-  }else if (KMD_Mode != "disabled") {
+  }
+  else
+  {
     KMD_SetMode("disabled")
-  } else {
-    ; set / toggle mode depending on Window?
-    KMD_SetMode("vi_normal_mode")
   }
 return
 
 ; Boy this is insane!
-; But its the onlsy modular way which came to my mind!
+; But its the only modular way which came to my mind!
 
-#if (KMD_SENDING == 0)
+#If (KMD_Mode != "disabled")
+$Esc::
+    if (KMD_Mode == "vi_insert_mode")
+    {
+      KMD_SetMode("vi_normal_mode")
+    }
+    else
+    {
+      Send {Esc}
+    }
+return
 
 Enter::
-  KMD_Modes[KMD_Mode]["handle_keys"]("{Enter}") 
+  KMD_Modes[KMD_Mode]["handle_keys"]("{Enter}")
 return
 -::
-  KMD_Modes[KMD_Mode]["handle_keys"]("-") 
+  KMD_Modes[KMD_Mode]["handle_keys"]("-")
 return
 /::
-  KMD_Modes[KMD_Mode]["handle_keys"]("/") 
+  KMD_Modes[KMD_Mode]["handle_keys"]("/")
 return
 *::
-  KMD_Modes[KMD_Mode]["handle_keys"]("*") 
+  KMD_Modes[KMD_Mode]["handle_keys"]("*")
 return
 ?::
-  KMD_Modes[KMD_Mode]["handle_keys"]("?") 
+  KMD_Modes[KMD_Mode]["handle_keys"]("?")
 return
 #::
-  KMD_Modes[KMD_Mode]["handle_keys"]("#") 
+  KMD_Modes[KMD_Mode]["handle_keys"]("#")
 return
-
 
 0::
   KMD_Modes[KMD_Mode]["handle_keys"]("0")
@@ -459,7 +471,7 @@ return
 ^t::
   KMD_Modes[KMD_Mode]["handle_keys"]("^t")
 return
-^u::		
+^u::
   KMD_Modes[KMD_Mode]["handle_keys"]("^u")
 return
 ^v::
